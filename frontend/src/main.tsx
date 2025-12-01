@@ -8,6 +8,7 @@ import Payment from './modules/payment/Payment'
 import PaymentSuccess from './modules/payment/PaymentSuccess'
 import Dashboard from './modules/dashboard/Dashboard'
 import SitesPage from './modules/sites/SitesPage'
+import ContactPage from './modules/contact/ContactPage'
 import AuthProvider, { useAuth } from './modules/auth/AuthContext'
 import LoginPage from './modules/auth/LoginPage'
 import { AdminGuard, UserGuard } from './modules/auth/guards'
@@ -31,6 +32,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route path="/payment" element={<Payment />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/login/payment-success" element={<PaymentSuccess />} />
+              <Route path="/contact" element={<ContactPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route
                 path="/dashboard"

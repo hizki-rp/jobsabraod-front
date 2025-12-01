@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { useLanguage } from '@/content/LanguageContext'
 import { useAuth } from '../auth/AuthContext'
@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Globe, ExternalLink, MapPin, Briefcase, Copy, Check, Search, LayoutDashboard } from 'lucide-react'
+import { Globe, ExternalLink, MapPin, Briefcase, Copy, Check, Search, LayoutDashboard, Sparkles } from 'lucide-react'
 import { getCountryFlag } from '@/lib/countryFlags'
+import { getCountryImage } from '@/lib/countryImages'
 
 interface JobSite { 
   id: number
@@ -184,21 +185,31 @@ export default function SitesPage() {
   })
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-50 min-h-[calc(100vh-4rem)]">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-50 min-h-[calc(100vh-4rem)] relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full mb-4 shadow-md border border-blue-100">
+                <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                <span className="text-sm font-semibold text-primary">Global Job Opportunities</span>
+              </div>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 bg-clip-text text-transparent mb-3">
                 {content.sites.title}
               </h1>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-xl text-gray-700 font-medium">
                 {content.sites.subtitle}
               </p>
             </div>
             {user && (
-              <Button asChild variant="outline" className="hidden sm:flex">
+              <Button asChild variant="outline" className="hidden sm:flex shadow-md hover:shadow-lg transition-all">
                 <Link to="/dashboard" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4" />
                   Back to Dashboard
@@ -209,12 +220,14 @@ export default function SitesPage() {
         </div>
 
         {/* Search and Country Selector */}
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Search Bar */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5" />
+          <Card className="bg-white/90 backdrop-blur-sm border-2 shadow-lg hover:shadow-xl transition-all rounded-2xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                  <Search className="h-4 w-4 text-white" />
+                </div>
                 {content.sites.searchSites}
               </CardTitle>
             </CardHeader>
@@ -226,28 +239,35 @@ export default function SitesPage() {
                   placeholder={content.sites.searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-11 border-2 focus:border-primary rounded-xl"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Country Selector */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
+          <Card className="bg-white/90 backdrop-blur-sm border-2 shadow-lg hover:shadow-xl transition-all rounded-2xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <MapPin className="h-4 w-4 text-white" />
+                </div>
                 {content.sites.selectCountry}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
                 <Select value={selectedCountry} onValueChange={handleCountryChange}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-11 border-2 rounded-xl">
                     <SelectValue placeholder={content.sites.allCountries} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{content.sites.allCountries}</SelectItem>
+                    <SelectItem value="all">
+                      <span className="flex items-center gap-2 font-semibold">
+                        <Globe className="h-4 w-4" />
+                        {content.sites.allCountries}
+                      </span>
+                    </SelectItem>
                     {allCountries.map((country) => (
                       <SelectItem key={country} value={country}>
                         <span className="flex items-center gap-2">
@@ -259,7 +279,7 @@ export default function SitesPage() {
                   </SelectContent>
                 </Select>
                 {selectedCountry && selectedCountry !== 'all' && (
-                  <Badge variant="secondary" className="text-sm whitespace-nowrap">
+                  <Badge className="text-sm whitespace-nowrap bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 shadow-md px-3 py-1">
                     {sites.length} {sites.length === 1 ? content.sites.siteFound : content.sites.sitesFound}
                   </Badge>
                 )}
@@ -304,56 +324,82 @@ export default function SitesPage() {
               )}
             </div>
             {filteredSites.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredSites.map(site => (
-                <Card key={site.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg mb-2">{site.site_name}</CardTitle>
-                        {site.country && (
-                          <Badge variant="outline" className="text-xs">
-                            <span className="mr-1 text-sm">{getCountryFlag(site.country)}</span>
-                            <MapPin className="h-3 w-3 mr-1 inline" />
-                            {site.country}
-                          </Badge>
-                        )}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {filteredSites.map(site => {
+                  const countryImage = getCountryImage(site.country)
+                  return (
+                    <Card 
+                      key={site.id} 
+                      className="group relative border-none rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+                    >
+                      {/* Country Image with Overlay */}
+                      {countryImage ? (
+                        <div className="relative h-48 overflow-hidden">
+                          <img 
+                            src={countryImage} 
+                            alt={site.country}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                        </div>
+                      ) : (
+                        <div className="relative h-48 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                          <span className="text-6xl opacity-90 transition-transform duration-300 group-hover:scale-110">{getCountryFlag(site.country)}</span>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                        </div>
+                      )}
+                      
+                      {/* Blurred Footer Overlay - Hero UI Style */}
+                      <div className="absolute bottom-1 left-1 right-1 z-10">
+                        <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-xl p-3 shadow-2xl">
+                          <div className="flex items-center justify-between gap-3 mb-2.5">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-sm font-semibold text-white line-clamp-1 mb-1">
+                                {site.site_name}
+                              </h3>
+                              <div className="flex items-center gap-1.5 text-xs text-gray-300">
+                                <span className="text-base">{getCountryFlag(site.country)}</span>
+                                <MapPin className="h-3 w-3" />
+                                <span className="truncate">{site.country}</span>
+                              </div>
+                            </div>
+                            <Globe className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button
+                              asChild
+                              size="sm"
+                              className="flex-1 h-8  hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl text-xs font-semibold transition-all"
+                            >
+                              <a
+                                href={site.site_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center justify-center gap-1.5"
+                              >
+                                Visit Site
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-8 w-8 p-0 bg-gray-800 hover:bg-gray-700 text-white border-0 shadow-md hover:shadow-lg transition-all"
+                              onClick={() => copyToClipboard(site.site_url)}
+                              title={copiedUrl === site.site_url ? content.sites.linkCopied : content.sites.copyLink}
+                            >
+                              {copiedUrl === site.site_url ? (
+                                <Check className="h-3 w-3 text-green-400" />
+                              ) : (
+                                <Copy className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <Globe className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        asChild
-                        className="flex-1"
-                      >
-                        <a
-                          href={site.site_url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {content.sites.viewSite}
-                          <ExternalLink className="h-4 w-4 ml-2" />
-                        </a>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => copyToClipboard(site.site_url)}
-                        title={copiedUrl === site.site_url ? content.sites.linkCopied : content.sites.copyLink}
-                        className="flex-shrink-0"
-                      >
-                        {copiedUrl === site.site_url ? (
-                          <Check className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </Card>
+                  )
+                })}
               </div>
             ) : (
               <Card>
@@ -390,39 +436,68 @@ export default function SitesPage() {
 
         {/* Popular Countries Section */}
         {popularCountries.length > 0 && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5" />
+          <Card className="mt-8 bg-white border border-gray-200 shadow-sm rounded-xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2.5 text-xl">
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <Briefcase className="h-4 w-4 text-white" />
+                </div>
                 {content.dashboard.popularCountries}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 {content.dashboard.explorePopularDestinations}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                {popularCountries.map((item, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="flex items-center gap-3 h-auto py-4 px-4 hover:bg-primary hover:text-white hover:border-primary transition-all duration-200 group"
-                    onClick={() => {
-                      setSelectedCountry(item.country)
-                      navigate(`/sites?country=${encodeURIComponent(item.country)}`)
-                    }}
-                  >
-                    <span className="text-2xl group-hover:scale-110 transition-transform duration-200">
-                      {getCountryFlag(item.country)}
-                    </span>
-                    <div className="text-left flex-1">
-                      <div className="font-semibold text-sm">{item.country}</div>
-                      <div className="text-xs text-muted-foreground group-hover:text-white/80">
-                        {item.site_count} {item.site_count === 1 ? content.dashboard.site : content.dashboard.sites}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {popularCountries.map((item, index) => {
+                  const countryImage = getCountryImage(item.country)
+                  return (
+                    <div
+                      key={index}
+                      className="group relative border-none rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                      onClick={() => {
+                        setSelectedCountry(item.country)
+                        navigate(`/sites?country=${encodeURIComponent(item.country)}`)
+                      }}
+                    >
+                      {countryImage ? (
+                        <div className="relative h-32 overflow-hidden">
+                          <img 
+                            src={countryImage} 
+                            alt={item.country}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-4xl drop-shadow-lg transition-transform duration-300 group-hover:scale-110">
+                              {getCountryFlag(item.country)}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative h-32 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                          <span className="text-4xl transition-transform duration-300 group-hover:scale-110">
+                            {getCountryFlag(item.country)}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Blurred Footer Overlay */}
+                      <div className="absolute bottom-1 left-1 right-1 z-10">
+                        <div className="bg-gray-900/75 backdrop-blur-lg border border-gray-700/40 rounded-lg p-2 shadow-xl">
+                          <div className="font-semibold text-xs text-white mb-0.5 truncate">
+                            {item.country}
+                          </div>
+                          <div className="text-[10px] text-gray-300 flex items-center gap-1">
+                            <Briefcase className="h-2.5 w-2.5" />
+                            {item.site_count} {item.site_count === 1 ? 'site' : 'sites'}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </Button>
-                ))}
+                  )
+                })}
               </div>
             </CardContent>
           </Card>

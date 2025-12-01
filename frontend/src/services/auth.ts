@@ -4,7 +4,7 @@ export type AuthTokens = { access: string; refresh: string };
 const ACCESS_KEY = 'auth_access_token';
 const REFRESH_KEY = 'auth_refresh_token';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://jobsabroad.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://jobsabroad-2.onrender.com/api';
 
 function saveTokens(tokens: AuthTokens) {
   localStorage.setItem(ACCESS_KEY, tokens.access);

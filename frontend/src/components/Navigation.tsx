@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/modules/auth/AuthContext'
 import { logout, getAccessToken } from '@/services/auth'
-import { LogOut, Home, LayoutDashboard, Briefcase } from 'lucide-react'
+import { LogOut, Home, LayoutDashboard, Briefcase, Mail } from 'lucide-react'
 import LanguageSwitcher from './LanguageSwitcher'
 import { cn } from '@/lib/utils'
 import { useEffect, useState } from 'react'
@@ -99,6 +99,17 @@ export default function Navigation() {
             {/* Homepage Navigation */}
             {isHomePage && (
               <>
+                <Button 
+                  asChild 
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/20 hover:text-white transition-all duration-200"
+                >
+                  <Link to="/contact" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    <span className="hidden sm:inline">Contact</span>
+                  </Link>
+                </Button>
                 <Button 
                   asChild 
                   variant="secondary"

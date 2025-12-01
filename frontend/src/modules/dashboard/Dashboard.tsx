@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useLanguage } from '@/content/LanguageContext'
@@ -6,8 +6,9 @@ import { fetchUserDashboard, fetchJobSites, fetchPopularCountries } from '../../
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ExternalLink, MapPin, Briefcase, Globe, Star, ChevronRight, Copy, Check, Loader2 } from 'lucide-react'
+import { ExternalLink, MapPin, Briefcase, Globe, Star, ChevronRight, Copy, Check } from 'lucide-react'
 import { getCountryFlag } from '@/lib/countryFlags'
+import { getCountryImage } from '@/lib/countryImages'
 
 interface JobSite { 
   id: number
@@ -53,8 +54,6 @@ export default function Dashboard() {
         if (dashboardRes.ok) {
           setCountry(dashboardRes.country || '')
           setSites(dashboardRes.job_sites || [])
-          // Payment check is handled by UserGuard - if we reach here, payment is complete
-          setNeedsPayment(false)
         }
 
         // Fetch popular countries
@@ -212,57 +211,82 @@ export default function Dashboard() {
                 <p className="mt-4 text-muted-foreground">{content.dashboard.loadingJobSites}</p>
               </div>
             ) : displaySites.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {displaySites.map(site => (
-                  <Card key={site.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-2">
-                            {site.site_name}
-                          </h3>
-                          {site.country && (
-                            <Badge variant="outline" className="mt-1 text-xs">
-                              <span className="mr-1 text-sm">{getCountryFlag(site.country)}</span>
-                              <MapPin className="h-3 w-3 mr-1 inline" />
-                              {site.country}
-                            </Badge>
-                          )}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {displaySites.map(site => {
+                  const countryImage = getCountryImage(site.country)
+                  return (
+                    <Card 
+                      key={site.id} 
+                      className="group relative border-none rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+                    >
+                      {/* Country Image with Overlay */}
+                      {countryImage ? (
+                        <div className="relative h-48 overflow-hidden">
+                          <img 
+                            src={countryImage} 
+                            alt={site.country}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                         </div>
-                        <Globe className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      ) : (
+                        <div className="relative h-48 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                          <span className="text-6xl opacity-90 transition-transform duration-300 group-hover:scale-110">{getCountryFlag(site.country)}</span>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                        </div>
+                      )}
+                      
+                      {/* Blurred Footer Overlay - Hero UI Style */}
+                      <div className="absolute bottom-1 left-1 right-1 z-10">
+                        <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-xl p-3 shadow-2xl">
+                          <div className="flex items-center justify-between gap-3 mb-2.5">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-sm font-semibold text-white line-clamp-1 mb-1">
+                                {site.site_name}
+                              </h3>
+                              <div className="flex items-center gap-1.5 text-xs text-gray-300">
+                                <span className="text-base">{getCountryFlag(site.country)}</span>
+                                <MapPin className="h-3 w-3" />
+                                <span className="truncate">{site.country}</span>
+                              </div>
+                            </div>
+                            <Globe className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button
+                              asChild
+                              size="sm"
+                              className="flex-1 h-8 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl text-xs font-semibold transition-all"
+                            >
+                              <a
+                                href={site.site_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center justify-center gap-1.5"
+                              >
+                                Go to Site
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-8 w-8 p-0 bg-gray-800 hover:bg-gray-700 text-white border-0 shadow-md hover:shadow-lg transition-all"
+                              onClick={() => copyToClipboard(site.site_url)}
+                              title={copiedUrl === site.site_url ? content.sites.linkCopied : content.sites.copyLink}
+                            >
+                              {copiedUrl === site.site_url ? (
+                                <Check className="h-3 w-3 text-green-400" />
+                              ) : (
+                                <Copy className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          asChild
-                          size="sm"
-                          className="flex-1"
-                        >
-                          <a
-                            href={site.site_url}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            {content.dashboard.goToSite}
-                            <ExternalLink className="h-3 w-3 ml-1" />
-                          </a>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => copyToClipboard(site.site_url)}
-                          title={copiedUrl === site.site_url ? content.sites.linkCopied : content.sites.copyLink}
-                          className="flex-shrink-0"
-                        >
-                          {copiedUrl === site.site_url ? (
-                            <Check className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </Card>
+                  )
+                })}
               </div>
             ) : (
               <div className="text-center py-8">

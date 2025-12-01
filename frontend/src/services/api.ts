@@ -1,5 +1,6 @@
 // Use environment variable or default to production
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://jobsabroad.onrender.com/api'
+// Note: Using VITE_API_BASE to match auth.ts
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://jobsabroad-2.onrender.com/api'
 
 async function request(path: string, opts: RequestInit = {}) {
   const token = localStorage.getItem('auth_access_token')
