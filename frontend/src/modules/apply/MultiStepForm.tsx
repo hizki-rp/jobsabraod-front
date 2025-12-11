@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { registerUser, submitApplicationDraft } from '../../services/api'
+import { registerUser } from '../../services/api'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,9 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ChevronLeft, ChevronRight, CreditCard, User, Briefcase, MapPin, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CreditCard, User, MapPin, Loader2, Eye, EyeOff } from 'lucide-react'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useLanguage } from '@/content/LanguageContext'
 
 export type ApplicationData = {
@@ -20,13 +19,20 @@ export type ApplicationData = {
   email: string
   phone_number: string
   password?: string
-  dob: string
-  currentRole: string
-  yearsExperience: string
-  skills: string
+  age: string
   country: string
+  desiredJob: string
   desiredStartDate: string
-  desiredSalary?: string
+}
+
+// Job options by country
+const jobsByCountry: Record<string, string[]> = {
+  'Poland': ['Warehouse Worker', 'Factory Line Operator', 'Agricultural Laborer (Farm Worker)', 'Construction Helper', 'Cleaner', 'Kitchen Assistant'],
+  'Germany': ['Logistics/Warehouse Assistant', 'Construction Laborer', 'Caregiver/Support Worker', 'Cleaning Staff', 'Food Processing Line Worker'],
+  'Netherlands': ['Greenhouse Worker (Horticulture)', 'Warehouse/Logistics Assistant', 'Factory Line Operator'],
+  'Spain': ['Seasonal Agricultural Worker (Fruit Picker)', 'Hotel Housekeeping', 'Industrial Cleaner', 'Delivery Worker'],
+  'Italy': ['Seasonal Farm Worker (Agriculture)', 'Hospitality (Kitchen Assistant, Housekeeping)'],
+  'Luxembourg': ['Cleaning Staff', 'Construction Laborer', 'Warehouse/Factory Worker', 'Kitchen Helper'],
 }
 
 const initialData: ApplicationData = {
@@ -36,13 +42,10 @@ const initialData: ApplicationData = {
   email: '',
   phone_number: '',
   password: '',
-  dob: '',
-  currentRole: '',
-  yearsExperience: '',
-  skills: '',
+  age: '',
   country: '',
+  desiredJob: '',
   desiredStartDate: '',
-  desiredSalary: '',
 }
 
 function StepIndicator({ step, total }: { step: number; total: number }) {
@@ -66,7 +69,8 @@ export default function MultiStepForm() {
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const total = 3
+  const [showPassword, setShowPassword] = useState(false)
+  const total = 2
   const navigate = useNavigate()
 
   const update = (patch: Partial<ApplicationData>) => setData(d => ({ ...d, ...patch }))
@@ -137,20 +141,17 @@ export default function MultiStepForm() {
         data.password && //
         data.password.length >= 8 && //
         data.phone_number && //
-        data.dob //
+        data.age //
       )
     if (step === 2)
-      return !!(data.currentRole && data.yearsExperience && data.skills) // Work Experience
-    if (step === 3)
-      return !!(data.country && data.desiredStartDate) // Job Preferences
+      return !!(data.country && data.desiredJob && data.desiredStartDate) // Job Preferences
     return false
   }
 
   const getStepIcon = (stepNum: number) => {
     switch (stepNum) {
       case 1: return <User className="h-5 w-5" />
-      case 2: return <Briefcase className="h-5 w-5" />
-      case 3: return <MapPin className="h-5 w-5" />
+      case 2: return <MapPin className="h-5 w-5" />
       default: return null
     }
   }
@@ -158,8 +159,7 @@ export default function MultiStepForm() {
   const getStepTitle = (stepNum: number) => {
     switch (stepNum) {
       case 1: return content.onboardingForm.personalInfo
-      case 2: return content.onboardingForm.workExperienceTitle
-      case 3: return content.onboardingForm.jobPreferencesTitle
+      case 2: return content.onboardingForm.jobPreferencesTitle
       default: return ''
     }
   }
@@ -179,8 +179,7 @@ export default function MultiStepForm() {
                 </CardTitle>
                 <CardDescription>
                   {step === 1 && content.onboardingForm.step1Instructions}
-                  {step === 2 && content.onboardingForm.workExperienceSubtitle}
-                  {step === 3 && content.onboardingForm.jobPreferencesSubtitle}
+                  {step === 2 && content.onboardingForm.jobPreferencesSubtitle}
                 </CardDescription>
               </div>
             </div>
@@ -235,13 +234,29 @@ export default function MultiStepForm() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">{content.onboardingForm.passwordLabel}</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder={currentLanguage === 'am' ? 'የይለፍ ቃል ይፍጠሩ (ቢያንስ 8 ቁምፊዎች)' : 'Create a password (min 8 characters)'}
-                    value={data.password}
-                    onChange={e => update({ password: e.target.value })}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder={currentLanguage === 'am' ? 'የይለፍ ቃል ይፍጠሩ (ቢያንስ 8 ቁምፊዎች)' : 'Create a password (min 8 characters)'}
+                      value={data.password}
+                      onChange={e => update({ password: e.target.value })}
+                      className="pr-12"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors focus:outline-none"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">{content.onboardingForm.phoneLabel}</Label>
@@ -253,67 +268,80 @@ export default function MultiStepForm() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="dob">{content.onboardingForm.dobLabel}</Label>
+                  <Label htmlFor="age">{currentLanguage === 'am' ? 'እድሜ' : 'Age'}</Label>
                   <Input
-                    id="dob"
-                    type="date"
-                    value={data.dob}
-                    onChange={e => update({ dob: e.target.value })}
+                    id="age"
+                    type="number"
+                    min="16"
+                    max="65"
+                    placeholder={currentLanguage === 'am' ? 'እድሜዎን ያስገቡ' : 'Enter your age'}
+                    value={data.age}
+                    onChange={e => update({ age: e.target.value })}
                   />
                 </div>
               </div>
             )}
 
             {step === 2 && (
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentRole">{content.onboardingForm.currentRoleLabel}</Label>
-                  <Input
-                    id="currentRole"
-                    placeholder={currentLanguage === 'am' ? 'ምሳሌ: የሶፍትዌር ምህንድስክ, የግብይት አስተዳዳሪ' : 'e.g. Software Engineer, Marketing Manager'}
-                    value={data.currentRole}
-                    onChange={e => update({ currentRole: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="experience">{content.onboardingForm.yearsExperienceLabel}</Label>
-                  <Input
-                    id="experience"
-                    type="number"
-                    min="0"
-                    placeholder={currentLanguage === 'am' ? 'የስራ ልምድ ዓመታት ያስገቡ' : 'Enter years of experience'}
-                    value={data.yearsExperience}
-                    onChange={e => update({ yearsExperience: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="skills">{content.onboardingForm.skillsLabel}</Label>
-                  <Textarea
-                    id="skills"
-                    placeholder={currentLanguage === 'am' ? 'ዋና የሙያ ችሎታዎችዎን ይዘርዝሩ (በኮማ የተለዩ)\nምሳሌ: JavaScript, React, Node.js, የፕሮጀክት አስተዳደር' : 'List your key skills (comma separated)\ne.g. JavaScript, React, Node.js, Project Management'}
-                    value={data.skills}
-                    onChange={e => update({ skills: e.target.value })}
-                    rows={4}
-                  />
-                </div>
-              </div>
-            )}
+              <div className="grid gap-6">
+                {/* Country Selection with Radio Buttons */}
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">
+                    {content.onboardingForm.preferredCountryLabel}
+                  </Label>
+                  <RadioGroup 
+                    value={data.country} 
+                    onValueChange={(value) => {
+                      update({ country: value, desiredJob: '' }) // Reset job when country changes
+                    }}
+                    name="country"
+                    className="grid grid-cols-2 gap-4"
+                  >
+                    {['Poland', 'Germany', 'Netherlands', 'Spain', 'Italy', 'Luxembourg'].map(country => (
+                      <div key={country} className="flex items-center space-x-2">
+                        <RadioGroupItem value={country} id={country} />
+                        <Label htmlFor={country} className="cursor-pointer">{country}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
 
-            {step === 3 && (
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="country">{content.onboardingForm.preferredCountryLabel}</Label>
-                  <Select value={data.country} onValueChange={(value) => update({ country: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={currentLanguage === 'am' ? 'ተመራጭ አገርዎን ይምረጡ' : 'Select your preferred country'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {['Germany', 'France', 'Netherlands', 'Sweden', 'Finland', 'Italy', 'Spain', 'United Kingdom', 'Canada', 'Australia'].map(country => (
-                        <SelectItem key={country} value={country}>{country}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
+
+                {/* Job Selection with Radio Buttons */}
+                {data.country && jobsByCountry[data.country] && (
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">
+                      {currentLanguage === 'am' ? 'የሚፈልጉት ስራ' : 'Desired Job in ' + data.country}
+                    </Label>
+                    <RadioGroup 
+                      value={data.desiredJob} 
+                      onValueChange={(value) => update({ desiredJob: value })}
+                      name="desiredJob"
+                      className="grid gap-3"
+                    >
+                      {jobsByCountry[data.country].map(job => (
+                        <div key={job} className="flex items-center space-x-2">
+                          <RadioGroupItem value={job} id={job} />
+                          <Label htmlFor={job} className="cursor-pointer text-sm">{job}</Label>
+                        </div>
+                      ))}
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Other" id="Other" />
+                        <Label htmlFor="Other" className="cursor-pointer text-sm">
+                          {currentLanguage === 'am' ? 'ሌላ' : 'Other'}
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                    <p className="text-xs text-muted-foreground">
+                      {currentLanguage === 'am' 
+                        ? 'በ' + data.country + ' ውስጥ ለኢትዮጵያውያን የተለመዱ የስራ እድሎች' 
+                        : 'Common job opportunities in ' + data.country + ' for international workers'}
+                    </p>
+                  </div>
+                )}
+
+
+
                 <div className="space-y-2">
                   <Label htmlFor="startDate">{content.onboardingForm.desiredStartDateLabel}</Label>
                   <Input
@@ -321,15 +349,6 @@ export default function MultiStepForm() {
                     type="month"
                     value={data.desiredStartDate}
                     onChange={e => update({ desiredStartDate: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="salary">{content.onboardingForm.desiredSalaryLabel}</Label>
-                  <Input
-                    id="salary"
-                    placeholder={currentLanguage === 'am' ? 'ምሳሌ: €50,000 - €70,000' : 'e.g. €50,000 - €70,000'}
-                    value={data.desiredSalary}
-                    onChange={e => update({ desiredSalary: e.target.value })}
                   />
                 </div>
               </div>

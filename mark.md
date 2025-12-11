@@ -14,7 +14,7 @@ The platform serves as a bridge between aspiring international students/workers 
 - Multi-language support (English and Amharic)
 
 ### Production URL
-- **Backend API**: `https://jobsabroad.onrender.com`
+- **Backend API**: `https://jobsabroad-2.onrender.com`
 - **Frontend**: Deployed separately (likely on Render or similar platform)
 
 ---
@@ -126,7 +126,7 @@ jobsabroad/
 - Alert and Badge components
 
 ### Frontend API Integration
-- Base URL: `https://jobsabroad.onrender.com/api`
+- Base URL: `https://jobsabroad-2.onrender.com/api`
 - JWT token authentication
 - RESTful API endpoints
 - Error handling and response parsing
